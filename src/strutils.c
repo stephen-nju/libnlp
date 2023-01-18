@@ -10,6 +10,7 @@
 
 
 #include "strutils.h"
+#include "utf8proc.h"
 
 #include <errno.h>
 #include <memory.h>
@@ -165,6 +166,203 @@ nlp_size_t utf8str_nlen(const nlp_uint8_t *str, nlp_size_t len)
     return num_utf8_chars;
 }
 nlp_size_t utf8str_len(const nlp_uint8_t *str) { return utf8str_nlen(str, SIZE_MAX); }
+
+nlp_uint8_t* utf8str_chr(const nlp_uint8_t *str, nlp_int32_t ch){
+    nlp_uint8_t c[6];
+
+  if (ch < 0x80)
+    {
+      nlp_uint8_t c0 = ch;
+      return (nlp_uint8_t *) strchr ((const char *) str, c0);
+    }
+  else
+      /* Loops equivalent to strstr, optimized for a specific length (2, 3, 4)
+         of the needle.  We use an algorithm similar to Boyer-Moore which
+         is documented in lib/unistr/u8-chr.c.  There is additional
+         complication because we need to check after every byte for
+         a NUL byte, but the idea is the same. */
+    switch (utf8proc_charwidth(ch))
+      {
+      case 2:
+        if (*str == 0 || str[1] == 0)
+          break;
+        {
+          uint8_t c0 = c[0];
+          uint8_t c1 = c[1];
+          /* Search for { c0, c1 }.  */
+          uint8_t s1 = str[1];
+
+          for (;;)
+            {
+              /* Here s[0] != 0, s[1] != 0.
+                 Test whether s[0..1] == { c0, c1 }.  */
+              if (s1 == c1)
+                {
+                  if (*str == c0)
+                    return (uint8_t *) str;
+                  else
+                    /* Skip the search at s + 1, because s[1] = c1 < c0.  */
+                    goto case2_skip2;
+                }
+              else
+                {
+                  if (s1 == c0)
+                    goto case2_skip1;
+                  else
+                    /* Skip the search at s + 1, because s[1] != c0.  */
+                    goto case2_skip2;
+                }
+             case2_skip2:
+              str++;
+              s1 = str[1];
+              if (str[1] == 0)
+                break;
+             case2_skip1:
+              str++;
+              s1 = str[1];
+              if (str[1] == 0)
+                break;
+            }
+        }
+        break;
+
+      case 3:
+        if (*str == 0 || str[1] == 0 || str[2] == 0)
+          break;
+        {
+          uint8_t c0 = c[0];
+          uint8_t c1 = c[1];
+          uint8_t c2 = c[2];
+          /* Search for { c0, c1, c2 }.  */
+          uint8_t s2 = str[2];
+
+          for (;;)
+            {
+              /* Here s[0] != 0, s[1] != 0, s[2] != 0.
+                 Test whether s[0..2] == { c0, c1, c2 }.  */
+              if (s2 == c2)
+                {
+                  if (str[1] == c1 && *str == c0)
+                    return (uint8_t *) str;
+                  else
+                    /* If c2 != c1:
+                         Skip the search at s + 1, because s[2] == c2 != c1.
+                       Skip the search at s + 2, because s[2] == c2 < c0.  */
+                    if (c2 == c1)
+                      goto case3_skip1;
+                    else
+                      goto case3_skip3;
+                }
+              else
+                {
+                  if (s2 == c1)
+                    goto case3_skip1;
+                  else if (s2 == c0)
+                    /* Skip the search at s + 1, because s[2] != c1.  */
+                    goto case3_skip2;
+                  else
+                    /* Skip the search at s + 1, because s[2] != c1.
+                       Skip the search at s + 2, because s[2] != c0.  */
+                    goto case3_skip3;
+                }
+             case3_skip3:
+              str++;
+              s2 = str[2];
+              if (str[2] == 0)
+                break;
+             case3_skip2:
+              str++;
+              s2 = str[2];
+              if (str[2] == 0)
+                break;
+             case3_skip1:
+              str++;
+              s2 = str[2];
+              if (str[2] == 0)
+                break;
+            }
+        }
+        break;
+
+      case 4:
+        if (*str == 0 || str[1] == 0 || str[2] == 0 || str[3] == 0)
+          break;
+        {
+          uint8_t c0 = c[0];
+          uint8_t c1 = c[1];
+          uint8_t c2 = c[2];
+          uint8_t c3 = c[3];
+          /* Search for { c0, c1, c2, c3 }.  */
+          uint8_t s3 = str[3];
+
+          for (;;)
+            {
+              /* Here s[0] != 0, s[1] != 0, s[2] != 0, s[3] != 0.
+                 Test whether s[0..3] == { c0, c1, c2, c3 }.  */
+              if (s3 == c3)
+                {
+                  if (str[2] == c2 && str[1] == c1 && *str == c0)
+                    return (uint8_t *) str;
+                  else
+                    /* If c3 != c2:
+                         Skip the search at s + 1, because s[3] == c3 != c2.
+                       If c3 != c1:
+                         Skip the search at s + 2, because s[3] == c3 != c1.
+                       Skip the search at s + 3, because s[3] == c3 < c0.  */
+                    if (c3 == c2)
+                      goto case4_skip1;
+                    else if (c3 == c1)
+                      goto case4_skip2;
+                    else
+                      goto case4_skip4;
+                }
+              else
+                {
+                  if (s3 == c2)
+                    goto case4_skip1;
+                  else if (s3 == c1)
+                    /* Skip the search at s + 1, because s[3] != c2.  */
+                    goto case4_skip2;
+                  else if (s3 == c0)
+                    /* Skip the search at s + 1, because s[3] != c2.
+                       Skip the search at s + 2, because s[3] != c1.  */
+                    goto case4_skip3;
+                  else
+                    /* Skip the search at s + 1, because s[3] != c2.
+                       Skip the search at s + 2, because s[3] != c1.
+                       Skip the search at s + 3, because s[3] != c0.  */
+                    goto case4_skip4;
+                }
+             case4_skip4:
+              str++;
+              s3 = str[3];
+              if (str[3] == 0)
+                break;
+             case4_skip3:
+              str++;
+              s3 = str[3];
+              if (str[3] == 0)
+                break;
+             case4_skip2:
+              str++;
+              s3 = str[3];
+              if (str[3] == 0)
+                break;
+             case4_skip1:
+              str++;
+              s3 = str[3];
+              if (str[3] == 0)
+                break;
+            }
+        }
+        break;
+      }
+
+  return NULL;
+
+
+ };
+
 
 
 // 参考GNU libunistring实现
