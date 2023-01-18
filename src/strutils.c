@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <memory.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 typedef enum casing_option { UTF8_LOWER, UTF8_UPPER } casing_option_t;
@@ -164,6 +165,116 @@ nlp_size_t utf8str_nlen(const nlp_uint8_t *str, nlp_size_t len)
     return num_utf8_chars;
 }
 nlp_size_t utf8str_len(const nlp_uint8_t *str) { return utf8str_nlen(str, SIZE_MAX); }
+
+
+// 参考GNU libunistring实现
+bool knuth_morris_pratt(const nlp_uint8_t *haystack,
+  const nlp_uint8_t *needle,
+  nlp_size_t needle_len,
+  const nlp_uint8_t **resultp)
+{
+    nlp_size_t m = needle_len;
+
+    /* Allocate the table.  */
+    nlp_size_t *table = (nlp_size_t *)malloc(sizeof(nlp_size_t) * m);
+    if (table == NULL) return false;
+    /* Fill the table.
+       For 0 < i < m:
+         0 < table[i] <= i is defined such that
+         forall 0 < x < table[i]: needle[x..i-1] != needle[0..i-1-x],
+         and table[i] is as large as possible with this property.
+       This implies:
+       1) For 0 < i < m:
+            If table[i] < i,
+            needle[table[i]..i-1] = needle[0..i-1-table[i]].
+       2) For 0 < i < m:
+            rhaystack[0..i-1] == needle[0..i-1]
+            and exists h, i <= h < m: rhaystack[h] != needle[h]
+            implies
+            forall 0 <= x < table[i]: rhaystack[x..x+m-1] != needle[0..m-1].
+       table[0] remains uninitialized.  */
+    {
+        nlp_size_t i, j;
+
+        /* i = 1: Nothing to verify for x = 0.  */
+        table[1] = 1;
+        j = 0;
+
+        for (i = 2; i < m; i++) {
+            /* Here: j = i-1 - table[i-1].
+               The inequality needle[x..i-1] != needle[0..i-1-x] is known to hold
+               for x < table[i-1], by induction.
+               Furthermore, if j>0: needle[i-1-j..i-2] = needle[0..j-1].  */
+            nlp_uint8_t b = needle[i - 1];
+
+            for (;;) {
+                /* Invariants: The inequality needle[x..i-1] != needle[0..i-1-x]
+                   is known to hold for x < i-1-j.
+                   Furthermore, if j>0: needle[i-1-j..i-2] = needle[0..j-1].  */
+                if (b == needle[j]) {
+                    /* Set table[i] := i-1-j.  */
+                    table[i] = i - ++j;
+                    break;
+                }
+                /* The inequality needle[x..i-1] != needle[0..i-1-x] also holds
+                   for x = i-1-j, because
+                     needle[i-1] != needle[j] = needle[i-1-x].  */
+                if (j == 0) {
+                    /* The inequality holds for all possible x.  */
+                    table[i] = i;
+                    break;
+                }
+                /* The inequality needle[x..i-1] != needle[0..i-1-x] also holds
+                   for i-1-j < x < i-1-j+table[j], because for these x:
+                     needle[x..i-2]
+                     = needle[x-(i-1-j)..j-1]
+                     != needle[0..j-1-(x-(i-1-j))]  (by definition of table[j])
+                        = needle[0..i-2-x],
+                   hence needle[x..i-1] != needle[0..i-1-x].
+                   Furthermore
+                     needle[i-1-j+table[j]..i-2]
+                     = needle[table[j]..j-1]
+                     = needle[0..j-1-table[j]]  (by definition of table[j]).  */
+                j = j - table[j];
+            }
+            /* Here: j = i - table[i].  */
+        }
+    }
+
+    /* Search, using the table to accelerate the processing.  */
+    {
+        nlp_size_t j;
+        const nlp_uint8_t *rhaystack;
+        const nlp_uint8_t *phaystack;
+
+        *resultp = NULL;
+        j = 0;
+        rhaystack = haystack;
+        phaystack = haystack;
+        /* Invariant: phaystack = rhaystack + j.  */
+        while (*phaystack != 0)
+            if (needle[j] == *phaystack) {
+                j++;
+                phaystack++;
+                if (j == m) {
+                    /* The entire needle has been found.  */
+                    *resultp = rhaystack;
+                    break;
+                }
+            } else if (j > 0) {
+                /* Found a match of needle[0..j-1], mismatch at needle[j].  */
+                rhaystack += table[j];
+                j -= table[j];
+            } else {
+                /* Found a mismatch at needle[0] already.  */
+                rhaystack++;
+                phaystack++;
+            }
+    }
+
+    free(table);
+    return true;
+}
 
 
 nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *__restrict dst)
