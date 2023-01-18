@@ -1,9 +1,8 @@
 /*
-string_utils.h
---------------
-
-Utilities for manipulating strings in C.
+strutils.h
 */
+
+
 #ifndef STR_UTILS_H
 #define STR_UTILS_H
 
@@ -85,14 +84,21 @@ LIBNLP_DLLEXPORT nlp_ssize_t utf8proc_iterate_reversed(const nlp_uint8_t *str, n
 // utf8 字符串长度
 LIBNLP_DLLEXPORT nlp_size_t utf8str_nlen(const nlp_uint8_t *str, nlp_size_t len);
 LIBNLP_DLLEXPORT nlp_size_t utf8str_len(const nlp_uint8_t *str);
-// 字符串trim
 
+// utf8 字符串搜索
+LIBNLP_DLLEXPORT bool utf8str_chr(const nlp_uint8_t *str, const nlp_int32_t ch);
+
+
+// 字符串trim
 // LIBNLP_DLLEXPORT char *utf8str_rstrip(char *s);
 // LIBNLP_DLLEXPORT char *utf8strlstrip(char *s);
 // LIBNLP_DLLEXPORT char *utf8str_strip(char *s);
 
 /// split函数 cat函数等
 LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *__restrict dst);
+LIBNLP_DLLEXPORT nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src,
+  const nlp_uint8_t *sep,
+  char **__restrict dst);
 
 // LIBUTiLS_DLLEXPORT bool utf8str_is_lower(char *s);
 // LIBUTiLS_DLLEXPORT char *utf8str_lower(char *s);

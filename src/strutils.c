@@ -1,10 +1,20 @@
+/*
+ * @Author: zhubin
+ * @Date: 2023-01-04 17:27:16
+ * @LastEditTime: 2023-01-18 14:03:28
+ * @FilePath: \libnlp\src\strutils.c
+ * @Description:
+ *
+ * Copyright (c) 2023 by zhubin, All Rights Reserved.
+ */
+
 
 #include "strutils.h"
 
 #include <errno.h>
-#include <string.h>
 #include <memory.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef enum casing_option { UTF8_LOWER, UTF8_UPPER } casing_option_t;
 
@@ -159,26 +169,31 @@ nlp_size_t utf8str_len(const nlp_uint8_t *str) { return utf8str_nlen(str, SIZE_M
 nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *__restrict dst)
 // 方案重写
 {
-    nlp_size_t src_len = strlen((const char*)src);
+    nlp_size_t src_len = strlen((const char *)src);
     // 不计算‘\0’
-    nlp_size_t dst_len = strlen((const char*)dst);
+    nlp_size_t dst_len = strlen((const char *)dst);
 
     nlp_size_t output_len = src_len + dst_len;
     nlp_uint8_t *output = (nlp_uint8_t *)malloc((src_len + dst_len + 1));
-        memset(output, 0, (src_len + dst_len + 1));
+    memset(output, 0, (src_len + dst_len + 1));
     if (!output) return NULL;
 #if __STDC_LIB_EXT1__
     memcpy_s(output, output_len, src, src_len);
     memcpy_s(output + src_len, output_len - src_len, dst, dst_len);
 #else
-    memcpy(output,src,src_len);
-    memcpy(output+src_len,dst,dst_len);
+    memcpy(output, src, src_len);
+    memcpy(output + src_len, dst, dst_len);
 #endif
 
 
     return output;
 }
 
+nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, char **__restrict dst)
+{
+    // 计算分割符长度
+    return 0;
+}
 // #include "log/log.h"
 // #include "string_utils.h"
 // #include "strndup.h"
