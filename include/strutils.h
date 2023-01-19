@@ -86,7 +86,8 @@ LIBNLP_DLLEXPORT nlp_size_t utf8str_nlen(const nlp_uint8_t *str, nlp_size_t len)
 LIBNLP_DLLEXPORT nlp_size_t utf8str_len(const nlp_uint8_t *str);
 
 // utf8 字符串搜索
-LIBNLP_DLLEXPORT nlp_uint8_t* utf8str_chr(const nlp_uint8_t *str, nlp_int32_t ch);
+LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_chr(const nlp_uint8_t *str, nlp_int32_t ch);
+LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_str(const nlp_uint8_t *haystack, const nlp_uint8_t *needle);
 
 
 // 字符串trim

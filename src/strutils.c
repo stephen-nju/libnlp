@@ -1,7 +1,7 @@
 /*
  * @Author: zhubin
  * @Date: 2023-01-04 17:27:16
- * @LastEditTime: 2023-01-18 14:03:28
+ * @LastEditTime: 2023-01-19 15:14:27
  * @FilePath: \libnlp\src\strutils.c
  * @Description:
  *
@@ -10,6 +10,7 @@
 
 
 #include "strutils.h"
+
 #include "utf8proc.h"
 
 #include <errno.h>
@@ -20,8 +21,7 @@
 
 typedef enum casing_option { UTF8_LOWER, UTF8_UPPER } casing_option_t;
 
-char *utf8_case(const char *s, casing_option_t casing, utf8proc_option_t options)
-{
+char *utf8_case(const char *s, casing_option_t casing, utf8proc_option_t options) {
     ssize_t len = (ssize_t)strlen(s);
     utf8proc_uint8_t *str = (utf8proc_uint8_t *)s;
 
@@ -69,22 +69,19 @@ char *utf8_case(const char *s, casing_option_t casing, utf8proc_option_t options
 char *utf8str_upper(char *s) { return utf8_case(s, UTF8_UPPER, UTF8PROC_OPTIONS_NFC); }
 char *utf8str_lower(char *s) { return utf8_case(s, UTF8_LOWER, UTF8PROC_OPTIONS_NFC); }
 
-bool utf8str_is_whitespace_char(nlp_int32_t cp)
-{
+bool utf8str_is_whitespace_char(nlp_int32_t cp) {
     const char *cat = utf8proc_category_string(cp);
     if (cp == ' ' || cp == '\t' || cp == '\n' || cp == '\r') { return true; }
     // Unicode中，每个字符都有Category的属性
     return cat[0] == 'Z' && cat[1] == 's';
 };
 
-bool utf8str_is_control_char(nlp_int32_t cp)
-{
+bool utf8str_is_control_char(nlp_int32_t cp) {
     const char *cat = utf8proc_category_string(cp);
     if (cp == '\t' || cp == '\n' || cp == '\r') { return false; }
     return 'C' == *cat;
 };
-bool utf8str_is_punctuation_char(nlp_int32_t cp)
-{
+bool utf8str_is_punctuation_char(nlp_int32_t cp) {
     const char *cat = utf8proc_category_string(cp);
     // ascii码中的标点符号
     if ((cp >= 33 && cp <= 47) || (cp >= 58 && cp <= 64) || (cp >= 91 && cp <= 96) || (cp >= 123 && cp <= 126)) {
@@ -93,8 +90,7 @@ bool utf8str_is_punctuation_char(nlp_int32_t cp)
     return 'P' == *cat;
 };
 
-bool utf8str_is_chinese_char(nlp_int32_t cp)
-{
+bool utf8str_is_chinese_char(nlp_int32_t cp) {
     // This defines a "chinese character" as anything in the CJK Unicode block:
     //   https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)
     //
@@ -114,8 +110,7 @@ nlp_ssize_t utf8str_iterate(const nlp_uint8_t *str, nlp_ssize_t strlen, nlp_int3
 {
     return utf8proc_iterate(str, strlen, dst);
 }
-nlp_ssize_t utf8proc_iterate_reversed(const nlp_uint8_t *str, nlp_ssize_t start, nlp_int32_t *dst)
-{
+nlp_ssize_t utf8proc_iterate_reversed(const nlp_uint8_t *str, nlp_ssize_t start, nlp_int32_t *dst) {
     /*
     对于 n 字节的符号（ n > 1），第一个字节的前 n 位都设为 1，第 n + 1 位设为 0，后面字节的前两位一律设为 10
     。剩下的没有提及的二进制位，全部为这个符号的 Unicode 码
@@ -137,8 +132,7 @@ nlp_ssize_t utf8proc_iterate_reversed(const nlp_uint8_t *str, nlp_ssize_t start,
 }
 
 
-nlp_size_t utf8str_nlen(const nlp_uint8_t *str, nlp_size_t len)
-{
+nlp_size_t utf8str_nlen(const nlp_uint8_t *str, nlp_size_t len) {
     if (str == NULL) return -1;
 
     if (len == 0) return 0;
@@ -167,210 +161,180 @@ nlp_size_t utf8str_nlen(const nlp_uint8_t *str, nlp_size_t len)
 }
 nlp_size_t utf8str_len(const nlp_uint8_t *str) { return utf8str_nlen(str, SIZE_MAX); }
 
-nlp_uint8_t* utf8str_chr(const nlp_uint8_t *str, nlp_int32_t ch){
+nlp_uint8_t *utf8str_chr(const nlp_uint8_t *str, nlp_int32_t ch) {
+    // reference： GNU libunistring
     nlp_uint8_t c[6];
 
-  if (ch < 0x80)
-    {
-      nlp_uint8_t c0 = ch;
-      return (nlp_uint8_t *) strchr ((const char *) str, c0);
-    }
-  else
-      /* Loops equivalent to strstr, optimized for a specific length (2, 3, 4)
-         of the needle.  We use an algorithm similar to Boyer-Moore which
-         is documented in lib/unistr/u8-chr.c.  There is additional
-         complication because we need to check after every byte for
-         a NUL byte, but the idea is the same. */
-    switch (utf8proc_charwidth(ch))
-      {
-      case 2:
-        if (*str == 0 || str[1] == 0)
-          break;
-        {
-          uint8_t c0 = c[0];
-          uint8_t c1 = c[1];
-          /* Search for { c0, c1 }.  */
-          uint8_t s1 = str[1];
-
-          for (;;)
+    if (ch < 0x80) {
+        // vale less 128,one character string
+        nlp_uint8_t c0 = ch;
+        return (nlp_uint8_t *)strchr((const char *)str, c0);
+    } else
+        /* Loops equivalent to strstr, optimized for a specific length (2, 3, 4)
+           of the needle.  We use an algorithm similar to Boyer-Moore which
+           is documented in lib/unistr/u8-chr.c.  There is additional
+           complication because we need to check after every byte for
+           a NUL byte, but the idea is the same. */
+        switch (utf8proc_encode_char(ch, c)) {
+        case 2:
+            if (*str == 0 || str[1] == 0) break;
             {
-              /* Here s[0] != 0, s[1] != 0.
-                 Test whether s[0..1] == { c0, c1 }.  */
-              if (s1 == c1)
-                {
-                  if (*str == c0)
-                    return (uint8_t *) str;
-                  else
-                    /* Skip the search at s + 1, because s[1] = c1 < c0.  */
-                    goto case2_skip2;
+                nlp_uint8_t c0 = c[0];
+                nlp_uint8_t c1 = c[1];
+                /* Search for { c0, c1 }.  */
+                nlp_uint8_t s1 = str[1];
+
+                for (;;) {
+                    /* Here s[0] != 0, s[1] != 0.
+                       Test whether s[0..1] == { c0, c1 }.  */
+                    if (s1 == c1) {
+                        if (*str == c0)
+                            return (nlp_uint8_t *)str;
+                        else
+                            /* Skip the search at s + 1, because s[1] = c1 < c0.  */
+                            goto case2_skip2;
+                    } else {
+                        if (s1 == c0)
+                            goto case2_skip1;
+                        else
+                            /* Skip the search at s + 1, because s[1] != c0.  */
+                            goto case2_skip2;
+                    }
+                case2_skip2:
+                    str++;
+                    s1 = str[1];
+                    if (str[1] == 0) break;
+                case2_skip1:
+                    str++;
+                    s1 = str[1];
+                    if (str[1] == 0) break;
                 }
-              else
-                {
-                  if (s1 == c0)
-                    goto case2_skip1;
-                  else
-                    /* Skip the search at s + 1, because s[1] != c0.  */
-                    goto case2_skip2;
-                }
-             case2_skip2:
-              str++;
-              s1 = str[1];
-              if (str[1] == 0)
-                break;
-             case2_skip1:
-              str++;
-              s1 = str[1];
-              if (str[1] == 0)
-                break;
             }
-        }
-        break;
+            break;
 
-      case 3:
-        if (*str == 0 || str[1] == 0 || str[2] == 0)
-          break;
-        {
-          uint8_t c0 = c[0];
-          uint8_t c1 = c[1];
-          uint8_t c2 = c[2];
-          /* Search for { c0, c1, c2 }.  */
-          uint8_t s2 = str[2];
-
-          for (;;)
+        case 3:
+            if (*str == 0 || str[1] == 0 || str[2] == 0) break;
             {
-              /* Here s[0] != 0, s[1] != 0, s[2] != 0.
-                 Test whether s[0..2] == { c0, c1, c2 }.  */
-              if (s2 == c2)
-                {
-                  if (str[1] == c1 && *str == c0)
-                    return (uint8_t *) str;
-                  else
-                    /* If c2 != c1:
-                         Skip the search at s + 1, because s[2] == c2 != c1.
-                       Skip the search at s + 2, because s[2] == c2 < c0.  */
-                    if (c2 == c1)
-                      goto case3_skip1;
-                    else
-                      goto case3_skip3;
+                nlp_uint8_t c0 = c[0];
+                nlp_uint8_t c1 = c[1];
+                nlp_uint8_t c2 = c[2];
+                /* Search for { c0, c1, c2 }.  */
+                nlp_uint8_t s2 = str[2];
+
+                for (;;) {
+                    /* Here s[0] != 0, s[1] != 0, s[2] != 0.
+                       Test whether s[0..2] == { c0, c1, c2 }.  */
+                    if (s2 == c2) {
+                        if (str[1] == c1 && *str == c0)
+                            return (nlp_uint8_t *)str;
+                        else
+                            /* If c2 != c1:
+                                 Skip the search at s + 1, because s[2] == c2 != c1.
+                               Skip the search at s + 2, because s[2] == c2 < c0.  */
+                            if (c2 == c1)
+                                goto case3_skip1;
+                            else
+                                goto case3_skip3;
+                    } else {
+                        if (s2 == c1)
+                            goto case3_skip1;
+                        else if (s2 == c0)
+                            /* Skip the search at s + 1, because s[2] != c1.  */
+                            goto case3_skip2;
+                        else
+                            /* Skip the search at s + 1, because s[2] != c1.
+                               Skip the search at s + 2, because s[2] != c0.  */
+                            goto case3_skip3;
+                    }
+                    // 牛逼
+                case3_skip3:
+                    str++;
+                    s2 = str[2];
+                    if (str[2] == 0) break;
+                case3_skip2:
+                    str++;
+                    s2 = str[2];
+                    if (str[2] == 0) break;
+                case3_skip1:
+                    str++;
+                    s2 = str[2];
+                    if (str[2] == 0) break;
                 }
-              else
-                {
-                  if (s2 == c1)
-                    goto case3_skip1;
-                  else if (s2 == c0)
-                    /* Skip the search at s + 1, because s[2] != c1.  */
-                    goto case3_skip2;
-                  else
-                    /* Skip the search at s + 1, because s[2] != c1.
-                       Skip the search at s + 2, because s[2] != c0.  */
-                    goto case3_skip3;
-                }
-             case3_skip3:
-              str++;
-              s2 = str[2];
-              if (str[2] == 0)
-                break;
-             case3_skip2:
-              str++;
-              s2 = str[2];
-              if (str[2] == 0)
-                break;
-             case3_skip1:
-              str++;
-              s2 = str[2];
-              if (str[2] == 0)
-                break;
             }
-        }
-        break;
+            break;
 
-      case 4:
-        if (*str == 0 || str[1] == 0 || str[2] == 0 || str[3] == 0)
-          break;
-        {
-          uint8_t c0 = c[0];
-          uint8_t c1 = c[1];
-          uint8_t c2 = c[2];
-          uint8_t c3 = c[3];
-          /* Search for { c0, c1, c2, c3 }.  */
-          uint8_t s3 = str[3];
-
-          for (;;)
+        case 4:
+            if (*str == 0 || str[1] == 0 || str[2] == 0 || str[3] == 0) break;
             {
-              /* Here s[0] != 0, s[1] != 0, s[2] != 0, s[3] != 0.
-                 Test whether s[0..3] == { c0, c1, c2, c3 }.  */
-              if (s3 == c3)
-                {
-                  if (str[2] == c2 && str[1] == c1 && *str == c0)
-                    return (uint8_t *) str;
-                  else
-                    /* If c3 != c2:
-                         Skip the search at s + 1, because s[3] == c3 != c2.
-                       If c3 != c1:
-                         Skip the search at s + 2, because s[3] == c3 != c1.
-                       Skip the search at s + 3, because s[3] == c3 < c0.  */
-                    if (c3 == c2)
-                      goto case4_skip1;
-                    else if (c3 == c1)
-                      goto case4_skip2;
-                    else
-                      goto case4_skip4;
+                nlp_uint8_t c0 = c[0];
+                nlp_uint8_t c1 = c[1];
+                nlp_uint8_t c2 = c[2];
+                nlp_uint8_t c3 = c[3];
+                /* Search for { c0, c1, c2, c3 }.  */
+                nlp_uint8_t s3 = str[3];
+
+                for (;;) {
+                    /* Here s[0] != 0, s[1] != 0, s[2] != 0, s[3] != 0.
+                       Test whether s[0..3] == { c0, c1, c2, c3 }.  */
+                    if (s3 == c3) {
+                        if (str[2] == c2 && str[1] == c1 && *str == c0)
+                            return (nlp_uint8_t *)str;
+                        else
+                            /* If c3 != c2:
+                                 Skip the search at s + 1, because s[3] == c3 != c2.
+                               If c3 != c1:
+                                 Skip the search at s + 2, because s[3] == c3 != c1.
+                               Skip the search at s + 3, because s[3] == c3 < c0.  */
+                            if (c3 == c2)
+                                goto case4_skip1;
+                            else if (c3 == c1)
+                                goto case4_skip2;
+                            else
+                                goto case4_skip4;
+                    } else {
+                        if (s3 == c2)
+                            goto case4_skip1;
+                        else if (s3 == c1)
+                            /* Skip the search at s + 1, because s[3] != c2.  */
+                            goto case4_skip2;
+                        else if (s3 == c0)
+                            /* Skip the search at s + 1, because s[3] != c2.
+                               Skip the search at s + 2, because s[3] != c1.  */
+                            goto case4_skip3;
+                        else
+                            /* Skip the search at s + 1, because s[3] != c2.
+                               Skip the search at s + 2, because s[3] != c1.
+                               Skip the search at s + 3, because s[3] != c0.  */
+                            goto case4_skip4;
+                    }
+                case4_skip4:
+                    str++;
+                    s3 = str[3];
+                    if (str[3] == 0) break;
+                case4_skip3:
+                    str++;
+                    s3 = str[3];
+                    if (str[3] == 0) break;
+                case4_skip2:
+                    str++;
+                    s3 = str[3];
+                    if (str[3] == 0) break;
+                case4_skip1:
+                    str++;
+                    s3 = str[3];
+                    if (str[3] == 0) break;
                 }
-              else
-                {
-                  if (s3 == c2)
-                    goto case4_skip1;
-                  else if (s3 == c1)
-                    /* Skip the search at s + 1, because s[3] != c2.  */
-                    goto case4_skip2;
-                  else if (s3 == c0)
-                    /* Skip the search at s + 1, because s[3] != c2.
-                       Skip the search at s + 2, because s[3] != c1.  */
-                    goto case4_skip3;
-                  else
-                    /* Skip the search at s + 1, because s[3] != c2.
-                       Skip the search at s + 2, because s[3] != c1.
-                       Skip the search at s + 3, because s[3] != c0.  */
-                    goto case4_skip4;
-                }
-             case4_skip4:
-              str++;
-              s3 = str[3];
-              if (str[3] == 0)
-                break;
-             case4_skip3:
-              str++;
-              s3 = str[3];
-              if (str[3] == 0)
-                break;
-             case4_skip2:
-              str++;
-              s3 = str[3];
-              if (str[3] == 0)
-                break;
-             case4_skip1:
-              str++;
-              s3 = str[3];
-              if (str[3] == 0)
-                break;
             }
+            break;
         }
-        break;
-      }
 
-  return NULL;
-
-
- };
-
-
-
+    return NULL;
+};
 // 参考GNU libunistring实现
 bool knuth_morris_pratt(const nlp_uint8_t *haystack,
   const nlp_uint8_t *needle,
   nlp_size_t needle_len,
-  const nlp_uint8_t **resultp)
-{
+  const nlp_uint8_t **resultp) {
     nlp_size_t m = needle_len;
 
     /* Allocate the table.  */
@@ -474,6 +438,10 @@ bool knuth_morris_pratt(const nlp_uint8_t *haystack,
     return true;
 }
 
+nlp_uint8_t *utf8str_str(const nlp_uint8_t *haystack, const nlp_uint8_t *needle){
+    // 字符串匹配，参考glibc实现
+
+};
 
 nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *__restrict dst)
 // 方案重写
@@ -498,8 +466,7 @@ nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *_
     return output;
 }
 
-nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, char **__restrict dst)
-{
+nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, char **__restrict dst) {
     // 计算分割符长度
     return 0;
 }
