@@ -1,4 +1,13 @@
 /*
+ * @Author: zhubin
+ * @Date: 2023-01-03 13:52:57
+ * @LastEditTime: 2023-01-29 16:08:48
+ * @FilePath: \libnlp\include\thrdpool.h
+ * @Description:
+ *
+ * Copyright (c) 2023 by zhubin, All Rights Reserved.
+ */
+/*
   Copyright (c) 2019 Sogou, Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,13 +34,12 @@ typedef struct __thrdpool thrdpool_t;
 
 struct thrdpool_task
 {
-	void (*routine)(void *);
-	void *context;
+    void (*routine)(void *);
+    void *context;
 };
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /*
@@ -50,12 +58,10 @@ thrdpool_t *thrdpool_create(size_t nthreads, size_t stacksize);
 int thrdpool_schedule(const struct thrdpool_task *task, thrdpool_t *pool);
 int thrdpool_increase(thrdpool_t *pool);
 int thrdpool_in_pool(thrdpool_t *pool);
-void thrdpool_destroy(void (*pending)(const struct thrdpool_task *),
-					  thrdpool_t *pool);
+void thrdpool_destroy(void (*pending)(const struct thrdpool_task *), thrdpool_t *pool);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

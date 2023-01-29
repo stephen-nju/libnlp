@@ -56,12 +56,6 @@ strutils.h
 // Lowercase
 #define UTF8PROC_OPTIONS_CASE_FOLD UTF8PROC_OPTIONS_BASE | UTF8PROC_CASEFOLD
 
-typedef int8_t nlp_int8_t;
-typedef int16_t nlp_int16_t;
-typedef int32_t nlp_int32_t;
-typedef uint8_t nlp_uint8_t;
-typedef ptrdiff_t nlp_ssize_t;
-typedef size_t nlp_size_t;
 
 #if defined(__cplusplus)
 extern "C" {

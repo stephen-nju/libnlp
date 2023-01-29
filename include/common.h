@@ -1,3 +1,12 @@
+/*
+ * @Author: zhubin
+ * @Date: 2023-01-05 15:42:36
+ * @LastEditTime: 2023-01-29 16:22:12
+ * @FilePath: \libnlp\include\common.h
+ * @Description:
+ *
+ * Copyright (c) 2023 by zhubin, All Rights Reserved.
+ */
 
 #ifndef COMMON_H_
 #define COMMON_H_
@@ -28,6 +37,14 @@ typedef SSIZE_T ssize_t;
 #define LIBNLP_DLLEXPORT
 #endif
 #endif
+
+
+typedef int8_t nlp_int8_t;
+typedef int16_t nlp_int16_t;
+typedef int32_t nlp_int32_t;
+typedef uint8_t nlp_uint8_t;
+typedef ptrdiff_t nlp_ssize_t;
+typedef size_t nlp_size_t;
 
 
 #endif
