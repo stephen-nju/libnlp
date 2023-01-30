@@ -692,11 +692,11 @@ nlp_uint8_t** utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t
         end = utf8str_str(start, sep);
         if(end==NULL) break;
         // nlp_uint8_t** dst = (nlp_uint8_t **)realloc(*dst, sizeof(nlp_uint8_t *) * (num + 1));
-        dst[num]=(nlp_uint8_t *)malloc(sizeof(nlp_uint8_t)*(end-start));
+        dst[num]=(nlp_uint8_t *)malloc(sizeof(nlp_uint8_t)*(end-start)+1);
         memcpy(dst[num], start, end-start);
         start=end+sep_len;
         num++;
-        dst=(nlp_uint8_t**)realloc(*dst, sizeof(nlp_uint8_t *)*num);
+        dst=(nlp_uint8_t**)realloc(dst, sizeof(nlp_uint8_t *)*(num+1));
     }while(start<(src+len));
 
     return dst;

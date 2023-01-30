@@ -26,7 +26,7 @@ TEST test_libnlp(void) {
     // nlp_uint8_t** dst=(nlp_uint8_t**)malloc(sizeof(nlp_uint8_t));
     
     nlp_uint8_t **ret = utf8str_split(s, d);
-    // printf("%s", ret);
+    printf("%s", ret[0]);
     PASS();
 }
 SUITE(libnlp_strutils_tests) { RUN_TEST(test_libnlp); }
