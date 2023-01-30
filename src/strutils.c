@@ -674,8 +674,8 @@ nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *_
     return output;
 }
 
-nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, char ***__restrict dst) {
-    if (src == NULL || sep == NULL || dst == NULL) {
+nlp_uint8_t** utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep) {
+    if (src == NULL || sep == NULL) {
         // errno = EINVAL;
         return -1;
     }
@@ -686,16 +686,20 @@ nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *s
     nlp_uint8_t *end = src;
     nlp_size_t pos = 0;
     nlp_size_t len = strlen(src);
+    nlp_uint8_t ** dst=malloc(sizeof(nlp_uint8_t));
     
      do{
-        end = utf8str_str(src, sep);
+        end = utf8str_str(start, sep);
         if(end==NULL) break;
-        nlp_uint8_t** tmp = (nlp_uint8_t **)realloc(*dst, sizeof(nlp_uint8_t *) * (num + 1));
-        memcpy(tmp[num++], start, end-start);
+        // nlp_uint8_t** dst = (nlp_uint8_t **)realloc(*dst, sizeof(nlp_uint8_t *) * (num + 1));
+        dst[num]=(nlp_uint8_t *)malloc(sizeof(nlp_uint8_t)*(end-start));
+        memcpy(dst[num], start, end-start);
         start=end+sep_len;
+        num++;
+        dst=(nlp_uint8_t**)realloc(*dst, sizeof(nlp_uint8_t *)*num);
     }while(start<(src+len));
 
-    return num;
+    return dst;
 }
 
 

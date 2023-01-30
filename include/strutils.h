@@ -90,9 +90,8 @@ LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_str(const nlp_uint8_t *haystack, const nlp
 
 /// split函数 cat函数等
 LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *__restrict dst);
-LIBNLP_DLLEXPORT nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src,
-  const nlp_uint8_t *sep,
-  char ***__restrict dst);
+LIBNLP_DLLEXPORT nlp_uint8_t** utf8str_split(const nlp_uint8_t *__restrict src,
+  const nlp_uint8_t *sep);
 
 // LIBUTiLS_DLLEXPORT bool utf8str_is_lower(char *s);
 // LIBUTiLS_DLLEXPORT char *utf8str_lower(char *s);
