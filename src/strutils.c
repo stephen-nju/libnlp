@@ -674,6 +674,20 @@ nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *_
 
 nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, char **__restrict dst) {
     // 计算分割符长度
+    nlp_size_t sep_len = utf8str_len(sep);
+    if (sep_len == 1) {
+        nlp_int32_t codepoint = 0;
+        nlp_size_t pos = 0;
+        nlp_size_t len = strlen(src);
+        while (pos < len) {
+            nlp_ssize_t n = utf8str_iterate(src, -1, &codepoint);
+            if (n < 0) {
+                perror("Decode UTF-8 Error");
+            } else {
+                pos += len;
+            }
+            if (codepoint == sep) {}
+        }
     return 0;
 }
 // #include "log/log.h"

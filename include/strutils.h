@@ -20,7 +20,6 @@ strutils.h
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #if defined(_MSC_VER)

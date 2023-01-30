@@ -1,7 +1,7 @@
 /*
  * @Author: zhubin
  * @Date: 2023-01-05 15:42:36
- * @LastEditTime: 2023-01-29 16:22:12
+ * @LastEditTime: 2023-01-30 09:13:35
  * @FilePath: \libnlp\include\common.h
  * @Description:
  *
@@ -38,7 +38,7 @@ typedef SSIZE_T ssize_t;
 #endif
 #endif
 
-
+#include <stdint.h>
 typedef int8_t nlp_int8_t;
 typedef int16_t nlp_int16_t;
 typedef int32_t nlp_int32_t;

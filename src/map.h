@@ -1,85 +1,75 @@
-/*
- * @Author: zhubin
- * @Date: 2023-01-29 17:45:50
- * @LastEditTime: 2023-01-29 17:49:37
- * @FilePath: \libnlp\src\map.h
- * @Description:
- *
- * Copyright (c) 2023 by zhubin, All Rights Reserved.
- */
-/**
- * Copyright (c) 2014 rxi
- * https://github.com/rxi/map
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the MIT license. See LICENSE for details.
- */
+//
+//  map.h
+//
+//  Created by Mashpoe on 1/15/21.
+//
 
-#ifndef MAP_H
-#define MAP_H
+#ifndef map_h
+#define map_h
 
-#include <string.h>
+#define hashmap_str_lit(str) (str), sizeof(str) - 1
+#define hashmap_static_arr(arr) (arr), sizeof(arr)
 
-#define MAP_VERSION "0.1.0"
+// removal of map elements is disabled by default because of its slight overhead.
+// if you want to enable this feature, uncomment the line below:
+//#define __HASHMAP_REMOVABLE
 
-struct map_node_t;
-typedef struct map_node_t map_node_t;
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-typedef struct
-{
-    map_node_t **buckets;
-    unsigned nbuckets, nnodes;
-} map_base_t;
+// hashmaps can associate keys with pointer values or integral types.
+typedef struct hashmap hashmap;
 
-typedef struct
-{
-    unsigned bucketidx;
-    map_node_t *node;
-} map_iter_t;
+// a callback type used for iterating over a map/freeing entries:
+// `void <function name>(void* key, size_t size, uintptr_t value, void* usr)`
+// `usr` is a user pointer which can be passed through `hashmap_iterate`.
+typedef void (*hashmap_callback)(void *key, size_t ksize, uintptr_t value, void *usr);
 
+hashmap* hashmap_create(void);
 
-#define map_t(T)         \
-    struct               \
-    {                    \
-        map_base_t base; \
-        T *ref;          \
-        T tmp;           \
-    }
+// only frees the hashmap object and buckets.
+// does not call free on each element's `key` or `value`.
+// to free data associated with an element, call `hashmap_iterate`.
+void hashmap_free(hashmap* map);
 
+// does not make a copy of `key`.
+// you must copy it yourself if you want to guarantee its lifetime,
+// or if you intend to call `hashmap_key_free`.
+void hashmap_set(hashmap* map, void* key, size_t ksize, uintptr_t value);
 
-#define map_init(m) memset(m, 0, sizeof(*(m)))
+// adds an entry if it doesn't exist, using the value of `*out_in`.
+// if it does exist, it sets value in `*out_in`, meaning the value
+// of the entry will be in `*out_in` regardless of whether or not
+// it existed in the first place.
+// returns true if the entry already existed, returns false otherwise.
+bool hashmap_get_set(hashmap* map, void* key, size_t ksize, uintptr_t* out_in);
 
+// similar to `hashmap_set()`, but when overwriting an entry,
+// you'll be able properly free the old entry's data via a callback.
+// unlike `hashmap_set()`, this function will overwrite the original key pointer,
+// which means you can free the old key in the callback if applicable.
+void hashmap_set_free(hashmap* map, void* key, size_t ksize, uintptr_t value, hashmap_callback c, void* usr);
 
-#define map_deinit(m) map_deinit_(&(m)->base)
+bool hashmap_get(hashmap* map, void* key, size_t ksize, uintptr_t* out_val);
 
+#ifdef __HASHMAP_REMOVABLE
+void hashmap_remove(hashmap *map, void *key, size_t ksize);
 
-#define map_get(m, key) ((m)->ref = map_get_(&(m)->base, key))
-
-
-#define map_set(m, key, value) ((m)->tmp = (value), map_set_(&(m)->base, key, &(m)->tmp, sizeof((m)->tmp)))
-
-
-#define map_remove(m, key) map_remove_(&(m)->base, key)
-
-
-#define map_iter(m) map_iter_()
-
-
-#define map_next(m, iter) map_next_(&(m)->base, iter)
-
-
-void map_deinit_(map_base_t *m);
-void *map_get_(map_base_t *m, const char *key);
-int map_set_(map_base_t *m, const char *key, void *value, int vsize);
-void map_remove_(map_base_t *m, const char *key);
-map_iter_t map_iter_(void);
-const char *map_next_(map_base_t *m, map_iter_t *iter);
-
-
-typedef map_t(void *) map_void_t;
-typedef map_t(char *) map_str_t;
-typedef map_t(int) map_int_t;
-typedef map_t(char) map_char_t;
-typedef map_t(float) map_float_t;
-typedef map_t(double) map_double_t;
-
+// same as `hashmap_remove()`, but it allows you to free an entry's data first via a callback.
+void hashmap_remove_free(hashmap* m, void* key, size_t ksize, hashmap_callback c, void* usr);
 #endif
+
+int hashmap_size(hashmap* map);
+
+// iterate over the map, calling `c` on every element.
+// goes through elements in the order they were added.
+// the element's key, key size, value, and `usr` will be passed to `c`.
+void hashmap_iterate(hashmap* map, hashmap_callback c, void* usr);
+
+// dumps bucket info for debugging.
+// allows you to see how many collisions you are getting.
+// `0` is an empty bucket, `1` is occupied, and `x` is removed.
+//void bucket_dump(hashmap *m);
+
+#endif // map_h
