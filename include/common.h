@@ -39,6 +39,7 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 typedef int8_t nlp_int8_t;
 typedef int16_t nlp_int16_t;
 typedef int32_t nlp_int32_t;

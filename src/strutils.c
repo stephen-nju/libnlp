@@ -11,6 +11,7 @@
 
 #include "strutils.h"
 
+#include "common.h"
 #include "utf8proc.h"
 
 #include <errno.h>
@@ -18,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 typedef enum casing_option { UTF8_LOWER, UTF8_UPPER } casing_option_t;
 
@@ -672,24 +674,33 @@ nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *_
     return output;
 }
 
-nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, char **__restrict dst) {
-    // 计算分割符长度
-    nlp_size_t sep_len = utf8str_len(sep);
-    if (sep_len == 1) {
-        nlp_int32_t codepoint = 0;
-        nlp_size_t pos = 0;
-        nlp_size_t len = strlen(src);
-        while (pos < len) {
-            nlp_ssize_t n = utf8str_iterate(src, -1, &codepoint);
-            if (n < 0) {
-                perror("Decode UTF-8 Error");
-            } else {
-                pos += len;
-            }
-            if (codepoint == sep) {}
-        }
-    return 0;
+nlp_size_t utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, char ***__restrict dst) {
+    if (src == NULL || sep == NULL || dst == NULL) {
+        // errno = EINVAL;
+        return -1;
+    }
+    nlp_int32_t num = 0;
+    nlp_size_t sep_len=strlen(sep);
+    nlp_int32_t codepoint = 0;
+    nlp_uint8_t *start = src;
+    nlp_uint8_t *end = src;
+    nlp_size_t pos = 0;
+    nlp_size_t len = strlen(src);
+    
+     do{
+        end = utf8str_str(src, sep);
+        if(end==NULL) break;
+        nlp_uint8_t** tmp = (nlp_uint8_t **)realloc(*dst, sizeof(nlp_uint8_t *) * (num + 1));
+        memcpy(tmp[num++], start, end-start);
+        start=end+sep_len;
+    }while(start<(src+len));
+
+    return num;
 }
+
+
+// 计算分割符长度
+
 // #include "log/log.h"
 // #include "string_utils.h"
 // #include "strndup.h"

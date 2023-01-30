@@ -7,6 +7,7 @@
  *
  * Copyright (c) 2023 by zhubin, All Rights Reserved.
  */
+#include "common.h"
 #include "greatest.h"
 #include "strutils.h"
 #include "utf8proc.h"
@@ -22,7 +23,8 @@ TEST test_libnlp(void) {
     // nlp_int32_t *dst = (nlp_int32_t *)malloc(sizeof(nlp_int32_t));
     // nlp_size_t d = utf8str_iterate("中", -1, dst);
     // printf("%zu", d);
-    nlp_uint8_t *ret = utf8str_str(s, d);
+    nlp_uint8_t** dst=(nlp_uint8_t**)malloc(sizeof(nlp_uint8_t));
+    nlp_uint8_t *ret = utf8str_split(s, d,dst);
     printf("%s", ret);
     PASS();
 }
