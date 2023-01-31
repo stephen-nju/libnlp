@@ -31,7 +31,13 @@ TEST test_utf8str_split(void) {
     PASS();
 }
 
-TEST test_utf8str_cat(void) { PASS(); }
+TEST test_utf8str_rstrip(void) {
+    const nlp_uint8_t *s = "adc dca  \n";
+    nlp_uint8_t ret = utf8str_rstrip(s);
+    printf("%s", (char *)ret);
+
+    PASS();
+}
 
 SUITE(libnlp_strutils_tests) {
     RUN_TEST(test_utf8str_split);

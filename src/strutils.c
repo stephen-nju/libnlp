@@ -1,7 +1,7 @@
 /*
  * @Author: zhubin
  * @Date: 2023-01-04 17:27:16
- * @LastEditTime: 2023-01-31 15:45:49
+ * @LastEditTime: 2023-01-31 17:56:14
  * @FilePath: \libnlp\src\strutils.c
  * @Description:
  *
@@ -770,7 +770,21 @@ nlp_uint8_t **utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t
 }
 // 计算分割符长度
 
-nlp_uint8_t *utf8str_rstrip(const nlp_uint8_t *src) {}
+nlp_uint8_t *utf8str_rstrip(const nlp_uint8_t *src) {
+    // 可以利用whitespace占一个字节的大小
+    nlp_size_t spaces = 0;
+    nlp_int32_t cp = 0;
+    nlp_ssize_t end_pos = strlen(src);
+    while (true) {
+        nlp_ssize_t bytes = utf8proc_iterate_reversed(src, end_pos, &cp);
+        if (bytes <= 0) break;
+        if (!utf8str_is_whitespace_char(cp)) break;
+        end_pos -= bytes;
+        spaces += bytes;
+    }
+    nlp_uint8_t *ret = (nlp_uint8_t *)calloc(end_pos + 1, sizeof(nlp_int8_t));
+    return ret;
+}
 
 
 // #include "log/log.h"
