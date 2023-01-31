@@ -783,6 +783,7 @@ nlp_uint8_t *utf8str_rstrip(const nlp_uint8_t *src) {
         spaces += bytes;
     }
     nlp_uint8_t *ret = (nlp_uint8_t *)calloc(end_pos + 1, sizeof(nlp_int8_t));
+    memcpy(ret,src,end_pos);
     return ret;
 }
 

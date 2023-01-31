@@ -33,7 +33,7 @@ TEST test_utf8str_split(void) {
 
 TEST test_utf8str_rstrip(void) {
     const nlp_uint8_t *s = "adc dca  \n";
-    nlp_uint8_t ret = utf8str_rstrip(s);
+    nlp_uint8_t *ret = utf8str_rstrip(s);
     printf("%s", (char *)ret);
 
     PASS();
@@ -41,5 +41,5 @@ TEST test_utf8str_rstrip(void) {
 
 SUITE(libnlp_strutils_tests) {
     RUN_TEST(test_utf8str_split);
-    RUN_TEST(test_utf8str_cat);
+    RUN_TEST(test_utf8str_rstrip);
 }
