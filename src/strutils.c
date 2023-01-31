@@ -1,7 +1,7 @@
 /*
  * @Author: zhubin
  * @Date: 2023-01-04 17:27:16
- * @LastEditTime: 2023-01-31 11:16:47
+ * @LastEditTime: 2023-01-31 15:45:49
  * @FilePath: \libnlp\src\strutils.c
  * @Description:
  *
@@ -440,6 +440,65 @@ bool knuth_morris_pratt(const nlp_uint8_t *haystack,
     return true;
 }
 
+nlp_uint8_t *utf8str_rchr(const nlp_uint8_t *str, nlp_int32_t ch) {
+    nlp_uint8_t *result = NULL;
+    nlp_uint8_t c[6];
+    if (ch < 0x80) {
+        // 小于128的单字节字符串
+        nlp_uint8_t c0 = ch;
+        for (;; str++) {
+            if (*str == c0) result = (nlp_uint8_t *)str;
+            if (*str == 0) break;
+        }
+    } else
+        switch (utf8proc_encode_char(ch, c)) {
+        case 2:
+            if (*str) {
+                nlp_uint8_t c0 = c[0];
+                nlp_uint8_t c1 = c[1];
+
+                /* FIXME: Maybe walking the string via u8_mblen is a win?  */
+                for (;; str++) {
+                    if (str[1] == 0) break;
+                    if (*str == c0 && str[1] == c1) result = (nlp_uint8_t *)str;
+                }
+            }
+            break;
+
+        case 3:
+            // str长度至少为2
+            if (*str && str[1]) {
+                uint8_t c0 = c[0];
+                uint8_t c1 = c[1];
+                uint8_t c2 = c[2];
+
+                /* FIXME: Maybe walking the string via u8_mblen is a win?  */
+                for (;; str++) {
+                    if (str[2] == 0) break;
+                    if (*str == c0 && str[1] == c1 && str[2] == c2) result = (nlp_uint8_t *)str;
+                }
+            }
+            break;
+
+        case 4:
+            if (*str && str[1] && str[2]) {
+                uint8_t c0 = c[0];
+                uint8_t c1 = c[1];
+                uint8_t c2 = c[2];
+                uint8_t c3 = c[3];
+
+                /* FIXME: Maybe walking the string via u8_mblen is a win?  */
+                for (;; str++) {
+                    if (str[3] == 0) break;
+                    if (*str == c0 && str[1] == c1 && str[2] == c2 && str[3] == c3) result = (nlp_uint8_t *)str;
+                }
+            }
+            break;
+        }
+
+
+    return result;
+}
 nlp_uint8_t *utf8str_str(const nlp_uint8_t *haystack, const nlp_uint8_t *needle) {
     // 字符串匹配，参考glibc实现
     nlp_uint8_t first = needle[0];
@@ -709,9 +768,10 @@ nlp_uint8_t **utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t
     *len = num;
     return dst;
 }
-
-
 // 计算分割符长度
+
+nlp_uint8_t *utf8str_rstrip(const nlp_uint8_t *src) {}
+
 
 // #include "log/log.h"
 // #include "string_utils.h"

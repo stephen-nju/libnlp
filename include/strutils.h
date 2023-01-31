@@ -80,10 +80,12 @@ LIBNLP_DLLEXPORT nlp_size_t utf8str_len(const nlp_uint8_t *str);
 
 // utf8 字符串搜索
 LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_chr(const nlp_uint8_t *str, nlp_int32_t ch);
+LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_rchr(const nlp_uint8_t *str, nlp_int32_t ch);
 LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_str(const nlp_uint8_t *haystack, const nlp_uint8_t *needle);
 
 
 // 字符串trim
+LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_rstrip(const nlp_uint8_t *src);
 // LIBNLP_DLLEXPORT char *utf8str_rstrip(char *s);
 // LIBNLP_DLLEXPORT char *utf8strlstrip(char *s);
 // LIBNLP_DLLEXPORT char *utf8str_strip(char *s);
@@ -91,7 +93,8 @@ LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_str(const nlp_uint8_t *haystack, const nlp
 /// split函数 cat函数等
 LIBNLP_DLLEXPORT nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *__restrict dst);
 LIBNLP_DLLEXPORT nlp_uint8_t **utf8str_split(const nlp_uint8_t *__restrict src,
-  const nlp_uint8_t *sep,nlp_int32_t *__restrict len);
+  const nlp_uint8_t *sep,
+  nlp_int32_t *__restrict len);
 
 // LIBUTiLS_DLLEXPORT bool utf8str_is_lower(char *s);
 // LIBUTiLS_DLLEXPORT char *utf8str_lower(char *s);
