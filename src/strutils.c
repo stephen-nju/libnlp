@@ -1,7 +1,7 @@
 /*
  * @Author: zhubin
  * @Date: 2023-01-04 17:27:16
- * @LastEditTime: 2023-01-19 16:46:26
+ * @LastEditTime: 2023-01-31 11:16:47
  * @FilePath: \libnlp\src\strutils.c
  * @Description:
  *
@@ -14,12 +14,12 @@
 #include "common.h"
 #include "utf8proc.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 typedef enum casing_option { UTF8_LOWER, UTF8_UPPER } casing_option_t;
 
@@ -674,31 +674,39 @@ nlp_uint8_t *utf8str_cat(const nlp_uint8_t *__restrict src, const nlp_uint8_t *_
     return output;
 }
 
-nlp_uint8_t** utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep) {
-    if (src == NULL || sep == NULL) {
-        // errno = EINVAL;
-        return -1;
-    }
-    nlp_int32_t num = 0;
-    nlp_size_t sep_len=strlen(sep);
-    nlp_int32_t codepoint = 0;
-    nlp_uint8_t *start = src;
-    nlp_uint8_t *end = src;
-    nlp_size_t pos = 0;
-    nlp_size_t len = strlen(src);
-    nlp_uint8_t ** dst=malloc(sizeof(nlp_uint8_t));
-    
-     do{
-        end = utf8str_str(start, sep);
-        if(end==NULL) break;
-        // nlp_uint8_t** dst = (nlp_uint8_t **)realloc(*dst, sizeof(nlp_uint8_t *) * (num + 1));
-        dst[num]=(nlp_uint8_t *)malloc(sizeof(nlp_uint8_t)*(end-start)+1);
-        memcpy(dst[num], start, end-start);
-        start=end+sep_len;
-        num++;
-        dst=(nlp_uint8_t**)realloc(dst, sizeof(nlp_uint8_t *)*(num+1));
-    }while(start<(src+len));
+nlp_uint8_t **utf8str_split(const nlp_uint8_t *__restrict src, const nlp_uint8_t *sep, nlp_int32_t *__restrict len) {
 
+    if (src == NULL || sep == NULL) return NULL;
+    nlp_int32_t num = 0;
+    nlp_size_t sep_len = strlen(sep);
+    nlp_int32_t codepoint = 0;
+    const nlp_uint8_t *start = src;
+    const nlp_uint8_t *end = src;
+    const nlp_uint8_t *src_end = src + strlen(src);
+    nlp_size_t pos = 0;
+    nlp_uint8_t **dst = malloc(sizeof(nlp_uint8_t **));
+    if (dst == NULL) return NULL;
+
+    do {
+        end = utf8str_str(start, sep);
+        if (end == NULL) {
+            dst[num] = (nlp_uint8_t *)malloc(sizeof(nlp_uint8_t) * (src_end - start) + 1);
+            memset(dst[num], 0, (src_end - start) + 1);
+            memcpy(dst[num], start, (src_end - start));
+            *len = num;
+            return dst;
+        } else {
+            // nlp_uint8_t** dst = (nlp_uint8_t **)realloc(*dst, sizeof(nlp_uint8_t *) * (num + 1));
+            dst[num] = (nlp_uint8_t *)malloc(sizeof(nlp_uint8_t) * (end - start) + 1);
+            memset(dst[num], 0, (end - start) + 1);
+            memcpy(dst[num], start, end - start);
+
+            start = end + sep_len;
+            num++;
+            dst = (nlp_uint8_t **)realloc(dst, sizeof(nlp_uint8_t **) * (num + 1));
+        }
+    } while (start < src_end);
+    *len = num;
     return dst;
 }
 

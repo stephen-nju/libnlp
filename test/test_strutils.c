@@ -1,7 +1,7 @@
 /*
  * @Author: zhubin
  * @Date: 2023-01-13 16:25:58
- * @LastEditTime: 2023-01-19 16:49:39
+ * @LastEditTime: 2023-01-31 11:45:23
  * @FilePath: \libnlp\test\test_strutils.c
  * @Descript
  *
@@ -17,16 +17,23 @@
 
 SUITE(libnlp_strutils_tests);
 
-TEST test_libnlp(void) {
-    const nlp_uint8_t *s = "abcde中国人在北京";
-    const nlp_uint8_t *d = "中国人";
+TEST test_utf8str_split(void) {
+    const nlp_uint8_t *s = "abacad";
+    const nlp_uint8_t *d = "a";
     // nlp_int32_t *dst = (nlp_int32_t *)malloc(sizeof(nlp_int32_t));
     // nlp_size_t d = utf8str_iterate("中", -1, dst);
     // printf("%zu", d);
     // nlp_uint8_t** dst=(nlp_uint8_t**)malloc(sizeof(nlp_uint8_t));
-    
-    nlp_uint8_t **ret = utf8str_split(s, d);
-    printf("%s", ret[0]);
+    nlp_int32_t len = -1;
+    nlp_uint8_t **ret = utf8str_split(s, d, &len);
+    printf("%d\n", len);
+    // printf("%s\n", ret[0]);
     PASS();
 }
-SUITE(libnlp_strutils_tests) { RUN_TEST(test_libnlp); }
+
+TEST test_utf8str_cat(void) { PASS(); }
+
+SUITE(libnlp_strutils_tests) {
+    RUN_TEST(test_utf8str_split);
+    RUN_TEST(test_utf8str_cat);
+}
