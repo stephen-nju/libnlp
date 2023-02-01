@@ -78,8 +78,8 @@ endif()
 # add src include path
 
 set(INCLUDE_DIRECTORIES
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/utf8proc)
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/utf8proc)
 
 add_subdirectory(src)
 
