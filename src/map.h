@@ -1,75 +1,90 @@
-//
-//  map.h
-//
-//  Created by Mashpoe on 1/15/21.
-//
+#ifndef __MAP_H
+#define __MAP_H
 
-#ifndef map_h
-#define map_h
-
-#define hashmap_str_lit(str) (str), sizeof(str) - 1
-#define hashmap_static_arr(arr) (arr), sizeof(arr)
-
-// removal of map elements is disabled by default because of its slight overhead.
-// if you want to enable this feature, uncomment the line below:
-//#define __HASHMAP_REMOVABLE
-
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-// hashmaps can associate keys with pointer values or integral types.
-typedef struct hashmap hashmap;
+typedef void *map_handle_t;
 
-// a callback type used for iterating over a map/freeing entries:
-// `void <function name>(void* key, size_t size, uintptr_t value, void* usr)`
-// `usr` is a user pointer which can be passed through `hashmap_iterate`.
-typedef void (*hashmap_callback)(void *key, size_t ksize, uintptr_t value, void *usr);
+// only used for return values
+typedef struct
+{
+    void *key;
+    size_t len;
+} map_key_t;
+typedef struct
+{
+    map_key_t key;
+    void *value;
+} map_entry_t;
 
-hashmap* hashmap_create(void);
+map_handle_t map_create(void);
+/*
+    Delete the map. NOT for removing one item in the map.
+    Use free_value and ctx to free the remain values if needed.
+    Those two can be NULL if not used.
+*/
+int map_delete(map_handle_t handle, void (*free_value)(void *value, void *ctx), void *ctx);
 
-// only frees the hashmap object and buckets.
-// does not call free on each element's `key` or `value`.
-// to free data associated with an element, call `hashmap_iterate`.
-void hashmap_free(hashmap* map);
+/*
+    Return NULL if failed.
+    Return value if key is new.
+    Return the replaced value if key exists.
+*/
+void *map_add(map_handle_t handle, void *key, size_t key_len, void *value);
+/*
+    Return the removed value.
+    If there is no such entry, return NULL.
+*/
+void *map_remove(map_handle_t handle, void *key, size_t key_len);
+/*
+    Clear the map.
+    Use free_value and ctx to free the values themselves.
+    Those two can be NULL if not used.
+*/
+int map_clear(map_handle_t handle, void (*free_value)(void *value, void *ctx), void *ctx);
+/* Return NULL if the entry does not exist */
+void *map_get(map_handle_t handle, void *key, size_t key_len);
+bool map_has(map_handle_t handle, void *key, size_t key_len);
+size_t map_get_length(map_handle_t handle);
 
-// does not make a copy of `key`.
-// you must copy it yourself if you want to guarantee its lifetime,
-// or if you intend to call `hashmap_key_free`.
-void hashmap_set(hashmap* map, void* key, size_t ksize, uintptr_t value);
+/*
+    Return the map keys as a map_key_t* array.
+    The array length is set to len.
+    DO NOT modify the keys! For they are references to the map keys.
+    Return value needs to be freed.
+*/
+map_key_t *map_keys(map_handle_t handle, size_t *len);
+/*
+    Return the map values as a void* array.
+    The array length is set to len.
+    Return value needs to be freed.
+*/
+void **map_values(map_handle_t handle, size_t *len);
+/*
+    Return the map values as a map_entry_t array.
+    The array length is set to len.
+    DO NOT modify the keys! For they are references to the map keys.
+    Return value needs to be freed.
+*/
+map_entry_t *map_entries(map_handle_t handle, size_t *len);
 
-// adds an entry if it doesn't exist, using the value of `*out_in`.
-// if it does exist, it sets value in `*out_in`, meaning the value
-// of the entry will be in `*out_in` regardless of whether or not
-// it existed in the first place.
-// returns true if the entry already existed, returns false otherwise.
-bool hashmap_get_set(hashmap* map, void* key, size_t ksize, uintptr_t* out_in);
+/* DO NOT use this directly */
+int map_forEach_start(map_handle_t handle, map_entry_t *entry);
+/* DO NOT use this directly */
+int map_forEach_next(map_handle_t handle, map_entry_t *entry);
+/*
+    Map forEach iterator. The order has nothing to do with the insertion order.
+    handle is a map_handle_t, entry is a map_entry_t.
+    DO NOT modify the map during this operation!
+*/
+#define map_forEach(handle, entry)                                            \
+    for (int i_f921f793 = map_forEach_start(handle, &entry); i_f921f793 == 0; \
+         i_f921f793 = map_forEach_next(handle, &entry))
 
-// similar to `hashmap_set()`, but when overwriting an entry,
-// you'll be able properly free the old entry's data via a callback.
-// unlike `hashmap_set()`, this function will overwrite the original key pointer,
-// which means you can free the old key in the callback if applicable.
-void hashmap_set_free(hashmap* map, void* key, size_t ksize, uintptr_t value, hashmap_callback c, void* usr);
+/* for diagnose */
+float map_get_conflict_ratio(map_handle_t *handle);
+float map_get_average_ops(map_handle_t *handle);
+size_t map_get_max_ops(map_handle_t *handle);
 
-bool hashmap_get(hashmap* map, void* key, size_t ksize, uintptr_t* out_val);
-
-#ifdef __HASHMAP_REMOVABLE
-void hashmap_remove(hashmap *map, void *key, size_t ksize);
-
-// same as `hashmap_remove()`, but it allows you to free an entry's data first via a callback.
-void hashmap_remove_free(hashmap* m, void* key, size_t ksize, hashmap_callback c, void* usr);
 #endif
-
-int hashmap_size(hashmap* map);
-
-// iterate over the map, calling `c` on every element.
-// goes through elements in the order they were added.
-// the element's key, key size, value, and `usr` will be passed to `c`.
-void hashmap_iterate(hashmap* map, hashmap_callback c, void* usr);
-
-// dumps bucket info for debugging.
-// allows you to see how many collisions you are getting.
-// `0` is an empty bucket, `1` is occupied, and `x` is removed.
-//void bucket_dump(hashmap *m);
-
-#endif // map_h
