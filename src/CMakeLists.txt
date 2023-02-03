@@ -1,4 +1,4 @@
-set(SOURCES strutils.c msgqueue.c thrdpool.c tokenizer.c hash/xxhash.c map.c)
+set(SOURCES strutils.c msgqueue.c thrdpool.c tokenizer.c hash/xxhash.c map.c readutils.c)
 
 add_library(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} ${INCLUDE_DIRECTORIES})

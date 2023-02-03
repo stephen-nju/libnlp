@@ -12,7 +12,7 @@
 #include "map.h"
 #include "readutils.h"
 #include "strutils.h"
-
+#include <stdio.h>
 #include <stdlib.h>
 
 struct basic_tokenizer

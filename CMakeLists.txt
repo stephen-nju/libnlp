@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 # Set the project name to your project name, my project isn't very descriptive
-project(libnlp VERSION 0.0.1)
+project(nlp VERSION 0.0.1)
 # set(CMAKE_C_STANDARD 11) set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # message(STATUS "<<< ${CMAKE_C_STANDARD}")
@@ -78,9 +78,12 @@ endif()
 # add src include path
 
 set(INCLUDE_DIRECTORIES
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${PROJECT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/utf8proc)
-
+    PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    # ${PROJECT_BINARY_DIR}
+     PRIVATE 
+     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/utf8proc)
 add_subdirectory(src)
 
 option(ENABLE_UNITY "Enable Unity builds of projects" OFF)
