@@ -1,3 +1,5 @@
+#ifndef READ_UTILS_H
+#define READ_UTILS_H
 
 #include "common.h"
 #include <stdio.h>
